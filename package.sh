@@ -1,11 +1,21 @@
 #!/bin/sh
+rm -rf build
+mkdir build
+cp -r *.lua res build
+cd build
+
+for f in `find . -name "*.lua"`; do
+  luamin -f $f > tmp
+  mv tmp $f
+done
+
 zip DaytimeCat -r *.lua res
 mv DaytimeCat.zip DaytimeCat.love
 
-rm -rf DaytimeCat-web
 love.js --compatibility --title "Daytime Cat" DaytimeCat.love DaytimeCat-web
-cp index.html DaytimeCat-web/index.html
+cp ../index.html DaytimeCat-web/index.html
 rm -rf DaytimeCat-web/theme
 
-rm DaytimeCat-web.zip
 zip DaytimeCat-web -r DaytimeCat-web
+
+cd ..
