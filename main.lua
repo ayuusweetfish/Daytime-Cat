@@ -2,6 +2,7 @@ W = 1080
 H = 720
 
 local isMobile = (love.system.getOS() == 'Android' or love.system.getOS() == 'iOS')
+local isWeb = (love.system.getOS() == 'Web')
 
 local globalScale
 love.window.setMode(W, H, {

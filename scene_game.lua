@@ -291,7 +291,7 @@ sceneGame = function (level)
       levelClearTime = levelClearTime + 1
       if levelClearTime == 240 then
         if level == #levels then
-          _G['replaceScene'](_G['sceneText'](4))
+          _G['replaceScene'](_G['sceneText'](11))
         else
           _G['replaceScene'](sceneGame(level + 1))
         end
