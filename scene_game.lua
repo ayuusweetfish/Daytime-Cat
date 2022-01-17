@@ -205,20 +205,23 @@ sceneGame = function (level)
   if level == 1 then
     hintText = love.graphics.newText(
       love.graphics.getFont(),
-      'Use arrow keys or W/S/A/D'
+      'Use arrow keys or W/S/A/D or mouse'
     )
   end
 
   local camX, camY = 0, 0
   local catX, catY = 0, 0
 
-  s.press = function (x, y)
-  end
+  local mouseMoveX, mouseMoveY = nil, nil
 
   s.move = function (x, y)
+    mouseMoveX = x - W / 2
+    mouseMoveY = y - H / 2
   end
+  s.press = s.move
 
   s.release = function (x, y)
+    mouseMoveX, mouseMoveY = nil, nil
   end
 
   local curInBush = nil
@@ -230,16 +233,36 @@ sceneGame = function (level)
   s.update = function ()
     -- Move cat
     local moveX, moveY = 0, 0
-    if love.keyboard.isDown('w', 'up') then moveY = moveY - 1 end
-    if love.keyboard.isDown('s', 'down') then moveY = moveY + 1 end
-    if love.keyboard.isDown('a', 'left') then moveX = moveX - 1 end
-    if love.keyboard.isDown('d', 'right') then moveX = moveX + 1 end
-    if levelClearTime < 0 and (moveX ~= 0 or moveY ~= 0) then
-      local v = 1.5 / (moveX^2 + moveY^2)^0.5
-      catX = catX + v * moveX
-      catY = catY + v * moveY
-      lastDirX, lastDirY = moveX, moveY
-      if levelEnterTime < 0 then levelEnterTime = 0 end
+    if levelClearTime < 0 then
+      if mouseMoveX ~= nil then
+        moveX, moveY = mouseMoveX, mouseMoveY
+        local angle = math.atan2(moveY, moveX)
+        lastDirX, lastDirY = 0, 0
+        if angle > -3/8 * math.pi and angle < 3/8 * math.pi then
+          lastDirX = 1
+        elseif angle < -5/8 * math.pi or angle > 5/8 * math.pi then
+          lastDirX = -1
+        end
+        if angle > -7/8 * math.pi and angle < -1/8 * math.pi then
+          lastDirY = -1
+        elseif angle > 1/8 * math.pi and angle < 7/8 * math.pi then
+          lastDirY = 1
+        end
+      else
+        if love.keyboard.isDown('w', 'up') then moveY = moveY - 1 end
+        if love.keyboard.isDown('s', 'down') then moveY = moveY + 1 end
+        if love.keyboard.isDown('a', 'left') then moveX = moveX - 1 end
+        if love.keyboard.isDown('d', 'right') then moveX = moveX + 1 end
+        if moveX ~= 0 or moveY ~= 0 then
+          lastDirX, lastDirY = moveX, moveY
+        end
+      end
+      if moveX ~= 0 or moveY ~= 0 then
+        local v = 1.5 / (moveX^2 + moveY^2)^0.5
+        catX = catX + v * moveX
+        catY = catY + v * moveY
+        if levelEnterTime < 0 then levelEnterTime = 0 end
+      end
     end
 
     -- Check bush intersection
