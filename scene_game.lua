@@ -9,6 +9,9 @@ local pawW, pawH = pawImage:getDimensions()
 local bushImage = love.graphics.newImage('res/bush1.png')
 local bushW, bushH = bushImage:getDimensions()
 
+local fishImage = love.graphics.newImage('res/fish.png')
+local fishW, fishH = fishImage:getDimensions()
+
 return function ()
   local s = {}
   local W, H = W, H
@@ -127,10 +130,10 @@ return function ()
       end
     end
     -- Add bush
-    if love.math.random() < spVicinity(spTrackPaws, 180, qx, qy) then
+    if love.math.random() * 0.5 + 0.5 < spVicinity(spTrackPaws, 180, qx, qy) then
       bushes[#bushes + 1] = {
         x = qx, y = qy,
-        ty = 1
+        ty = (love.math.random() < 0.2 and 2 or 1)
       }
     end
   end
@@ -171,9 +174,18 @@ return function ()
     local _, inBush = spVicinity(spBushes, 60, catX, catY)
     if inBush ~= curInBush then
       curInBush = inBush
-      curInBushTime = 0
-      if inBush ~= nil and inBush.ty == 0 then
-        print('win!')
+      if inBush ~= nil then
+        if (inBush.ty == 0 or inBush.ty == 2) and inBush.visited then
+          curInBushTime = 1e5
+        else
+          curInBushTime = 0
+        end
+        if inBush.ty == 0 or inBush.ty == 2 then
+          inBush.visited = true
+        end
+        if inBush.ty == 0 then
+          print('win!')
+        end
       end
     elseif curInBush ~= nil then
       curInBushTime = curInBushTime + 1
@@ -209,12 +221,22 @@ return function ()
     love.graphics.setColor(1, 1, 1)
     for i = 1, #bushes do
       local b = bushes[i]
-      local squeeze = 1
-      if curInBush == b then
-        squeeze = 1 + 0.2 * math.exp(-curInBushTime / 60) * math.sin(curInBushTime / 10)
+      if b.visited then
+        love.graphics.draw(fishImage,
+          ox + b.x, oy + b.y, 0, 1, 1, fishW / 2, fishH)
       end
-      love.graphics.draw(bushImage,
-        ox + b.x, oy + b.y, 0, 1, squeeze, bushW / 2, bushH * 0.9)
+      if curInBush == b or not b.visited then
+        local squeeze = 1
+        if curInBush == b then
+          if curInBush.visited then
+            squeeze = squeeze * math.exp(-curInBushTime / 10) * math.max(0, 1 - curInBushTime / 120)
+          elseif curInBushTime <= 600 then
+            squeeze = 1 + 0.2 * math.exp(-curInBushTime / 60) * math.sin(curInBushTime / 10)
+          end
+        end
+        love.graphics.draw(bushImage,
+          ox + b.x, oy + b.y, 0, 1, squeeze, bushW / 2, bushH * 0.9)
+      end
     end
 
     love.graphics.setColor(0.1, 0.1, 0.1)
