@@ -44,6 +44,10 @@ local levels = {
    331552, 2000, 200},
   {333152, 7, 3.5, 4, 1.0,
    0, 500, 500},
+  {152, 7, 3.5, 4, 1.0,
+   152, 1000, 500},
+  {152152, 8, 4.5, 5, 1.0,
+   117, 1500, 500},
 }
 
 local sceneGame
@@ -291,7 +295,7 @@ sceneGame = function (level)
       levelClearTime = levelClearTime + 1
       if levelClearTime == 240 then
         if level == #levels then
-          _G['replaceScene'](_G['sceneText'](11))
+          _G['replaceScene'](_G['sceneText'](10))
         else
           _G['replaceScene'](sceneGame(level + 1))
         end
@@ -336,6 +340,10 @@ sceneGame = function (level)
         )
       end
     end
+
+    -- Spawn point
+    love.graphics.setColor(1.0, 0.95, 0.8, 0.9)
+    love.graphics.circle('fill', ox, oy, 90)
 
     -- Paws
     love.graphics.setColor(1, 1, 1)
