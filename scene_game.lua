@@ -3,6 +3,16 @@ local sp = require 'spacepart'
 local spPartition = sp.partition
 local spVicinity = sp.vicinity
 
+local groundImage = love.graphics.newImage('res/ground.png')
+local groundCellSize = 120
+local groundQuad = {}
+for i = 1, 4 do
+  groundQuad[i] = love.graphics.newQuad(
+    (i - 1) * groundCellSize, 0, groundCellSize, groundCellSize,
+    groundImage:getPixelDimensions()
+  )
+end
+
 local pawImage = love.graphics.newImage('res/paw.png')
 local pawW, pawH = pawImage:getDimensions()
 
@@ -22,14 +32,15 @@ local levels = {
   {3, 20, 0, 10, 0.2,
    0, 300, 0},
   {1, 10, 0, 10, 0.5,
-   0, 0, 0},
+   0, 300, 50},
   {15, 3, 2, 2.5, 0.4,
    0, 500, 50},
   {15, 7, 3, 3.5, 1.0,
    331552, 2000, 200},
 }
 
-return function (level)
+local sceneGame
+sceneGame = function (level)
   local s = {}
   local W, H = W, H
 
@@ -192,6 +203,7 @@ return function (level)
 
   local curInBush = nil
   local curInBushTime = 0
+  local levelClearTime = -1
 
   s.update = function ()
     -- Move cat
@@ -200,7 +212,7 @@ return function (level)
     if love.keyboard.isDown('s', 'down') then moveY = moveY + 1 end
     if love.keyboard.isDown('a', 'left') then moveX = moveX - 1 end
     if love.keyboard.isDown('d', 'right') then moveX = moveX + 1 end
-    if moveX ~= 0 or moveY ~= 0 then
+    if levelClearTime < 0 and (moveX ~= 0 or moveY ~= 0) then
       local v = 1.5 / (moveX^2 + moveY^2)^0.5
       catX = catX + v * moveX
       catY = catY + v * moveY
@@ -220,11 +232,19 @@ return function (level)
           inBush.visited = true
         end
         if inBush.ty == 0 then
-          print('win!')
+          levelClearTime = 0
         end
       end
     elseif curInBush ~= nil then
       curInBushTime = curInBushTime + 1
+    end
+
+    -- Level clear?
+    if levelClearTime >= 0 then
+      levelClearTime = levelClearTime + 1
+      if levelClearTime == 240 then
+        _G['replaceScene'](sceneGame(level + 1))
+      end
     end
 
     -- Move camera
@@ -240,10 +260,31 @@ return function (level)
   end
 
   s.draw = function ()
-    love.graphics.clear(0.98, 0.98, 0.98)
     local ox = W * 0.5 - camX
     local oy = H * 0.5 - camY
 
+    -- Ground
+    love.graphics.clear(1.00, 0.99, 0.93)
+    love.graphics.setColor(1, 1, 1)
+    local noiseScale = ((2^0.5) + math.pi) * 5
+    for cx = math.floor((camX - W * 0.5) / groundCellSize),
+             math.ceil((camX + W * 0.5) / groundCellSize) + 4 do
+      for cy = math.floor((camY - H * 0.5) / groundCellSize),
+               math.ceil((camY + H * 0.5) / groundCellSize) + 3 do
+        local id = love.math.noise(cx * noiseScale, cy * noiseScale)
+        local ty =
+          id < 0.8 and 1 or
+          id < 0.9 and 4 or
+          id < 0.95 and 3 or 2
+        love.graphics.draw(
+          groundImage, groundQuad[ty],
+          cx * groundCellSize - camX,
+          cy * groundCellSize - camY
+        )
+      end
+    end
+
+    -- Paws
     love.graphics.setColor(1, 1, 1)
     for i = 1, #paws do
       local p = paws[i]
@@ -306,3 +347,5 @@ return function (level)
 
   return s
 end
+
+return sceneGame
