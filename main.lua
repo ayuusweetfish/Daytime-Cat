@@ -49,7 +49,7 @@ end
 local T = 0
 local timeStep = 1 / 240
 
-function love.upate()
+function love.update(dt)
   T = T + dt
   local count = 0
   while T > timeStep do
