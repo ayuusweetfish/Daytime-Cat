@@ -5,10 +5,11 @@ local isMobile = (love.system.getOS() == 'Android' or love.system.getOS() == 'iO
 local isWeb = (love.system.getOS() == 'Web')
 
 local globalScale
-love.window.setMode(W, H, {
-  fullscreen = isMobile,
-  highdpi = true,
-})
+love.window.setMode(
+  isWeb and (W / 3 * 2) or W,
+  isWeb and (H / 3 * 2) or H,
+  { fullscreen = isMobile, highdpi = true }
+)
 love.window.setTitle('Daytime Cat')
 local wDev, hDev = love.graphics.getDimensions()
 W = wDev / hDev * H
@@ -121,5 +122,11 @@ function love.draw()
     end
   else
     curScene.draw()
+  end
+end
+
+function love.keypressed(key)
+  if key == '`' then
+    love.graphics.captureScreenshot(os.time() .. '.png')
   end
 end
