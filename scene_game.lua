@@ -6,6 +6,9 @@ local spVicinity = sp.vicinity
 local pawImage = love.graphics.newImage('res/paw.png')
 local pawW, pawH = pawImage:getDimensions()
 
+local bushImage = love.graphics.newImage('res/bush1.png')
+local bushW, bushH = bushImage:getDimensions()
+
 return function ()
   local s = {}
   local W, H = W, H
@@ -29,6 +32,8 @@ return function ()
       flip = flip,
     }
   end
+  -- Bushes
+  local bushes = {}
 
   for i = 1, #p - 1, 2 do
     -- Draw a paw
@@ -45,6 +50,12 @@ return function ()
   end
   -- On-track paws lookup table
   local spTrackPaws = spPartition(paws)
+
+  bushes[#bushes + 1] = {
+    x = p[#p].x,
+    y = p[#p].y,
+    ty = 1
+  }
 
   love.math.setRandomSeed(333152)
   -- Low-discrepancy noise
@@ -115,6 +126,13 @@ return function ()
         addPaw(x, y, angle, flipped)
       end
     end
+    -- Add bush
+    if love.math.random() < spVicinity(spTrackPaws, 180, qx, qy) then
+      bushes[#bushes + 1] = {
+        x = qx, y = qy,
+        ty = 1
+      }
+    end
   end
 
   local camX, camY = 0, 0
@@ -156,9 +174,10 @@ return function ()
 
   s.draw = function ()
     love.graphics.clear(0.98, 0.98, 0.98)
-    love.graphics.setColor(1, 1, 1)
     local ox = W * 0.5 - camX
     local oy = H * 0.5 - camY
+
+    love.graphics.setColor(1, 1, 1)
     for i = 1, #paws do
       local p = paws[i]
       love.graphics.draw(pawImage,
@@ -166,6 +185,13 @@ return function ()
         p.flip and -0.6 or 0.6, 0.6,
         pawW / 2, pawH / 2
       )
+    end
+
+    love.graphics.setColor(1, 1, 1)
+    for i = 1, #bushes do
+      local b = bushes[i]
+      love.graphics.draw(bushImage,
+        ox + b.x, oy + b.y, 0, 1, 1, bushW / 2, bushH / 2)
     end
 
     love.graphics.setColor(0.1, 0.1, 0.1)
