@@ -43,7 +43,7 @@ end
 local randomPathKeypoints = function (seed, curv, minLen, maxLen)
   randseed(seed)
 
-::redo::
+local generate = function ()
   local pts = {{x = 0, y = 0}}
   local th = rand() * math.pi * 2
   local ema = 0
@@ -101,7 +101,7 @@ local randomPathKeypoints = function (seed, curv, minLen, maxLen)
     )
   end
   if sumLen < minLen or sumLen > maxLen then
-    goto redo
+    return nil
   end
   -- Check self-intersection
   for i = 3, M do
@@ -111,7 +111,7 @@ local randomPathKeypoints = function (seed, curv, minLen, maxLen)
       pts[i - 1].x, pts[i - 1].y,
       pts[i].x, pts[i].y
     ) < 0.2 then
-      goto redo
+      return nil
     end
   end
   for i = 4, M do
@@ -123,10 +123,17 @@ local randomPathKeypoints = function (seed, curv, minLen, maxLen)
         pts[j].x, pts[j].y
       )
       if d < 0.2 then
-        goto redo
+        return nil
       end
     end
   end
+  return pts, sumLen
+end
+
+  local pts, sumLen
+  repeat
+    pts, sumLen = generate()
+  until pts ~= nil
 
   return pts, sumLen
 end
