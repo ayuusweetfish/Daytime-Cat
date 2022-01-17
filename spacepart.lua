@@ -22,10 +22,12 @@ local partition = function (pts)
 end
 
 local vicinity = function (ptsPart, r, x, y)
+  local cy1 = cellCoord(y - r)
+  local cy2 = cellCoord(y + r)
   local rsq = r * r
   local best, bestObj = rsq, nil
   for cx = cellCoord(x - r), cellCoord(x + r) do
-    for cy = cellCoord(y - r), cellCoord(y + r) do
+    for cy = cy1, cy2 do
       local t = ptsPart[cellId(cx, cy)]
       if t ~= nil then
         for i = 1, #t do
@@ -41,7 +43,19 @@ local vicinity = function (ptsPart, r, x, y)
   return math.sqrt(best / rsq), bestObj
 end
 
+local forEach = function (ptsPart, x1, y1, x2, y2, fn)
+  local cy1 = cellCoord(y1)
+  local cy2 = cellCoord(y2) + 1
+  for cx = cellCoord(x1), cellCoord(x2) + 1 do
+    for cy = cy1, cy2 do
+      local t = ptsPart[cellId(cx, cy)]
+      if t ~= nil then for i = 1, #t do fn(t[i]) end end
+    end
+  end
+end
+
 return {
   partition = partition,
   vicinity = vicinity,
+  forEach = forEach,
 }

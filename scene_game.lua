@@ -2,6 +2,7 @@ local randomPath = require 'randpath'
 local sp = require 'spacepart'
 local spPartition = sp.partition
 local spVicinity = sp.vicinity
+local spForEach = sp.forEach
 
 local groundImage = love.graphics.newImage('res/ground.png')
 local groundCellSize = 120
@@ -347,14 +348,17 @@ sceneGame = function (level)
 
     -- Paws
     love.graphics.setColor(1, 1, 1)
-    for i = 1, #paws do
-      local p = paws[i]
-      love.graphics.draw(pawImage,
-        ox + p.x, oy + p.y, p.angle,
-        p.flip and -0.6 or 0.6, 0.6,
-        pawW / 2, pawH / 2
-      )
-    end
+    spForEach(
+      spAllPaws,
+      camX - W / 2 - 100, camY - H / 2 - 100,
+      camX + W / 2 + 100, camY + H / 2 + 100,
+      function (p)
+        love.graphics.draw(pawImage,
+          ox + p.x, oy + p.y, p.angle,
+          p.flip and -0.6 or 0.6, 0.6,
+          pawW / 2, pawH / 2
+        )
+      end)
 
     -- Cat
     love.graphics.setColor(1, 1, 1)
@@ -375,8 +379,11 @@ sceneGame = function (level)
     end
 
     love.graphics.setColor(1, 1, 1)
-    for i = 1, #bushes do
-      local b = bushes[i]
+    spForEach(
+      spBushes,
+      camX - W / 2 - 100, camY - H / 2 - 100,
+      camX + W / 2 + 100, camY + H / 2 + 100,
+    function (b)
       if b.visited then
         if b.ty == 0 then
           love.graphics.draw(sleepImage,
@@ -403,7 +410,7 @@ sceneGame = function (level)
             ox + b.x, oy + b.y, 0, 1, squeeze, bush1W / 2, bush1H * 0.9)
         end
       end
-    end
+    end)
 
     -- Level text
     if levelEnterTime < 480 then
