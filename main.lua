@@ -15,7 +15,7 @@ globalScale = math.min(wDev / W, hDev / H)
 
 local sceneGame = require 'scene_game'
 
-local curScene = sceneGame()
+local curScene = sceneGame(1)
 local lastScene = nil
 local transitionTimer = 0
 local currentTransition = nil

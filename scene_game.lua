@@ -6,19 +6,44 @@ local spVicinity = sp.vicinity
 local pawImage = love.graphics.newImage('res/paw.png')
 local pawW, pawH = pawImage:getDimensions()
 
-local bushImage = love.graphics.newImage('res/bush1.png')
-local bushW, bushH = bushImage:getDimensions()
+local bush1Image = love.graphics.newImage('res/bush1.png')
+local bush1W, bush1H = bush1Image:getDimensions()
+local bush2Image = love.graphics.newImage('res/bush2.png')
+local bush2W, bush2H = bush2Image:getDimensions()
 
+local sleepImage = love.graphics.newImage('res/sleep.png')
+local sleepW, sleepH = sleepImage:getDimensions()
 local fishImage = love.graphics.newImage('res/fish.png')
 local fishW, fishH = fishImage:getDimensions()
 
-return function ()
+local levels = {
+  -- track: seed, curv, lmin, lmax, trunc,
+  -- noise: seed, spray, arcs
+  {3, 20, 0, 10, 0.2,
+   0, 300, 0},
+  {1, 10, 0, 10, 0.5,
+   0, 0, 0},
+  {15, 3, 2, 2.5, 0.4,
+   0, 500, 50},
+  {15, 7, 3, 3.5, 1.0,
+   331552, 2000, 200},
+}
+
+return function (level)
   local s = {}
   local W, H = W, H
 
+  local trackSeed = levels[level][1]
+  local trackCurv = levels[level][2]
+  local trackLenMin = levels[level][3]
+  local trackLenMax = levels[level][4]
+  local trackTrunc = levels[level][5]
+  local noiseSeed = levels[level][6]
+  local noiseSpray = levels[level][7]
+  local noiseArcs = levels[level][8]
+
   -- Generate path
-  local seed = 10
-  local p = randomPath(seed, 7, 3, 3.5)
+  local p = randomPath(trackSeed, trackCurv, trackLenMin, trackLenMax)
   --p = randomPath(seed, 3, 2, 2.5)
   --p = randomPath(seed, 20, 0, 10)
   local scale = math.min(W, H) * 4
@@ -26,6 +51,8 @@ return function ()
     p[i].x = p[i].x * scale
     p[i].y = p[i].y * scale
   end
+  -- Truncate
+  for i = math.floor(#p * trackTrunc) + 1, #p do p[i] = nil end
 
   -- Paws
   local paws = {}
@@ -60,13 +87,21 @@ return function ()
     ty = 0
   }
 
-  love.math.setRandomSeed(333152)
-  -- Low-discrepancy noise
-  local x = love.math.random()
-  local y = love.math.random()
-  for i = 1, 2000 do
-    x = (x + 2^0.5) % 1
-    y = (y + 3^0.5) % 1
+  love.math.setRandomSeed(noiseSeed)
+  -- Low-discrepancy noise by Halton sequence
+  local halton = function (b, i)
+    local f = 1
+    local r = 0
+    while i > 0 do
+      f = f / b
+      r = r + f * (i % b)
+      i = math.floor(i / b)
+    end
+    return r
+  end
+  for i = 1, noiseSpray do
+    local x = halton(2, noiseSeed + i)
+    local y = halton(3, noiseSeed + i)
     local x1 = x + love.math.random() * 0.01
     local y1 = y + love.math.random() * 0.01
     local x2 = (x1 * 2 - 1) * scale
@@ -80,7 +115,7 @@ return function ()
     end
   end
   -- Random arcs
-  for i = 1, 200 do
+  for i = 1, noiseArcs do
     -- Random endpoints
     local px, py
     repeat
@@ -131,9 +166,10 @@ return function ()
     end
     -- Add bush
     if love.math.random() * 0.5 + 0.5 < spVicinity(spTrackPaws, 180, qx, qy) then
+      local tyArg = love.math.random()
       bushes[#bushes + 1] = {
         x = qx, y = qy,
-        ty = (love.math.random() < 0.2 and 2 or 1)
+        ty = (tyArg < 0.05 and 2 or (tyArg < 0.2 and 3 or 1))
       }
     end
   end
@@ -175,12 +211,12 @@ return function ()
     if inBush ~= curInBush then
       curInBush = inBush
       if inBush ~= nil then
-        if (inBush.ty == 0 or inBush.ty == 2) and inBush.visited then
+        if (inBush.ty == 0 or inBush.ty == 2 or inBush.ty == 3) and inBush.visited then
           curInBushTime = 1e5
         else
           curInBushTime = 0
         end
-        if inBush.ty == 0 or inBush.ty == 2 then
+        if inBush.ty == 0 or inBush.ty == 2 or inBush.ty == 3 then
           inBush.visited = true
         end
         if inBush.ty == 0 then
@@ -222,8 +258,13 @@ return function ()
     for i = 1, #bushes do
       local b = bushes[i]
       if b.visited then
-        love.graphics.draw(fishImage,
-          ox + b.x, oy + b.y, 0, 1, 1, fishW / 2, fishH)
+        if b.ty == 0 then
+          love.graphics.draw(sleepImage,
+            ox + b.x, oy + b.y, 0, 1, 1, sleepW / 2, sleepH * 0.9)
+        elseif b.ty == 2 or b.ty == 3 then
+          love.graphics.draw(fishImage,
+            ox + b.x, oy + b.y, 0, 1, 1, fishW / 2, fishH)
+        end
       end
       if curInBush == b or not b.visited then
         local squeeze = 1
@@ -234,8 +275,13 @@ return function ()
             squeeze = 1 + 0.2 * math.exp(-curInBushTime / 60) * math.sin(curInBushTime / 10)
           end
         end
-        love.graphics.draw(bushImage,
-          ox + b.x, oy + b.y, 0, 1, squeeze, bushW / 2, bushH * 0.9)
+        if b.ty == 0 or b.ty == 2 then
+          love.graphics.draw(bush2Image,
+            ox + b.x, oy + b.y, 0, 1, squeeze, bush2W / 2, bush2H * 0.9)
+        else
+          love.graphics.draw(bush1Image,
+            ox + b.x, oy + b.y, 0, 1, squeeze, bush1W / 2, bush1H * 0.9)
+        end
       end
     end
 
