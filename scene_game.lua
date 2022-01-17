@@ -11,7 +11,7 @@ return function ()
   local W, H = W, H
 
   -- Generate path
-  local seed = 0
+  local seed = 10
   local p = randomPath(seed, 7, 3, 3.5)
   --p = randomPath(seed, 3, 2, 2.5)
   --p = randomPath(seed, 20, 0, 10)
@@ -47,21 +47,73 @@ return function ()
   local spTrackPaws = spPartition(paws)
 
   love.math.setRandomSeed(333152)
+  -- Low-discrepancy noise
   local x = love.math.random()
   local y = love.math.random()
-  for i = 1, 5000 do
+  for i = 1, 2000 do
     x = (x + 2^0.5) % 1
     y = (y + 3^0.5) % 1
     local x1 = x + love.math.random() * 0.01
     local y1 = y + love.math.random() * 0.01
     local x2 = (x1 * 2 - 1) * scale
     local y2 = (y1 * 2 - 1) * scale
-    if not spVicinity(spTrackPaws, 30, x2, y2) then
+    if love.math.random() < spVicinity(spTrackPaws, 60, x2, y2) then
       addPaw(
         x2, y2,
         love.math.random() * math.pi * 2,
         love.math.random() < 0.5
       )
+    end
+  end
+  -- Random arcs
+  for i = 1, 200 do
+    -- Random endpoints
+    local px, py
+    repeat
+      px = (love.math.random() * 2 - 1) * scale
+      py = (love.math.random() * 2 - 1) * scale
+    until px*px + py * py >= 500*500
+    local len = love.math.random() * 1000 + 200
+    local th = love.math.random() * math.pi * 2
+    local mx = px + math.cos(th) * len / 2
+    local my = py + math.cos(th) * len / 2
+    local qx = px + math.cos(th) * len
+    local qy = py + math.cos(th) * len
+    -- Random passing point
+    local odev = (love.math.random() * 0.25 + 0.1) * len
+    local phi = love.math.random() * math.pi * 2
+    local ox = mx + math.cos(phi) * odev
+    local oy = my + math.sin(phi) * odev
+    -- Circumcentre
+    local denom = 2 * (px * (qy - oy) + qx * (oy - py) + ox * (py - qy))
+    local cx = (
+      (px^2 + py^2) * (qy - oy) +
+      (qx^2 + qy^2) * (oy - py) +
+      (ox^2 + oy^2) * (py - qy)
+    ) / denom
+    local cy = (
+      (px^2 + py^2) * (ox - qx) +
+      (qx^2 + qy^2) * (px - ox) +
+      (ox^2 + oy^2) * (qx - px)
+    ) / denom
+    local r = math.sqrt((px - cx)^2 + (py - cy)^2)
+    local ang1 = math.atan2(py - cy, px - cx)
+    local ang2 = math.atan2(qy - cy, qx - cx)
+    if math.abs(ang1 - ang2) >= math.pi then
+      if ang1 < 0 then ang1 = ang1 + math.pi * 2
+      else ang2 = ang2 + math.pi * 2 end
+    end
+    -- Draw arc
+    local subdiv = math.floor(r * math.abs(ang2 - ang1) / 80)
+    for i = 0, subdiv do
+      local outer = (i % 2 == 0)
+      local r = (outer and r + 30 or r - 30)
+      local angle = ang1 + (ang2 - ang1) * i / subdiv
+      local x = cx + math.cos(angle) * r
+      local y = cy + math.sin(angle) * r
+      if love.math.random() < spVicinity(spTrackPaws, 120, x, y) then
+        addPaw(x, y, angle, flipped)
+      end
     end
   end
 

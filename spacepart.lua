@@ -23,6 +23,7 @@ end
 
 local vicinity = function (ptsPart, r, x, y)
   local rsq = r * r
+  local best = rsq
   for cx = cellCoord(x - r), cellCoord(x + r) do
     for cy = cellCoord(y - r), cellCoord(y + r) do
       local t = ptsPart[cellId(cx, cy)]
@@ -30,14 +31,14 @@ local vicinity = function (ptsPart, r, x, y)
         for i = 1, #t do
           local p = t[i]
           local dsq = (x - p.x)^2 + (y - p.y)^2
-          if dsq <= rsq then
-            return true
+          if dsq < best then
+            best = dsq
           end
         end
       end
     end
   end
-  return false
+  return math.sqrt(best / rsq)
 end
 
 return {
