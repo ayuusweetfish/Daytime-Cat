@@ -54,7 +54,7 @@ return function ()
   bushes[#bushes + 1] = {
     x = p[#p].x,
     y = p[#p].y,
-    ty = 1
+    ty = 0
   }
 
   love.math.setRandomSeed(333152)
@@ -115,7 +115,7 @@ return function ()
       else ang2 = ang2 + math.pi * 2 end
     end
     -- Draw arc
-    local subdiv = math.floor(r * math.abs(ang2 - ang1) / 80)
+    local subdiv = math.ceil(r * math.abs(ang2 - ang1) / 80)
     for i = 0, subdiv do
       local outer = (i % 2 == 0)
       local r = (outer and r + 30 or r - 30)
@@ -135,6 +135,10 @@ return function ()
     end
   end
 
+  -- Partition all paws and all bushes
+  local spAllPaws = spPartition(paws)
+  local spBushes = spPartition(bushes)
+
   local camX, camY = 0, 0
   local catX, catY = 0, 0
 
@@ -147,6 +151,9 @@ return function ()
   s.release = function (x, y)
   end
 
+  local curInBush = nil
+  local curInBushTime = 0
+
   s.update = function ()
     -- Move cat
     local moveX, moveY = 0, 0
@@ -158,6 +165,18 @@ return function ()
       local v = 1.5 / (moveX^2 + moveY^2)^0.5
       catX = catX + v * moveX
       catY = catY + v * moveY
+    end
+
+    -- Check bush intersection
+    local _, inBush = spVicinity(spBushes, 60, catX, catY)
+    if inBush ~= curInBush then
+      curInBush = inBush
+      curInBushTime = 0
+      if inBush ~= nil and inBush.ty == 0 then
+        print('win!')
+      end
+    elseif curInBush ~= nil then
+      curInBushTime = curInBushTime + 1
     end
 
     -- Move camera
@@ -190,8 +209,12 @@ return function ()
     love.graphics.setColor(1, 1, 1)
     for i = 1, #bushes do
       local b = bushes[i]
+      local squeeze = 1
+      if curInBush == b then
+        squeeze = 1 + 0.2 * math.exp(-curInBushTime / 60) * math.sin(curInBushTime / 10)
+      end
       love.graphics.draw(bushImage,
-        ox + b.x, oy + b.y, 0, 1, 1, bushW / 2, bushH / 2)
+        ox + b.x, oy + b.y, 0, 1, squeeze, bushW / 2, bushH * 0.9)
     end
 
     love.graphics.setColor(0.1, 0.1, 0.1)

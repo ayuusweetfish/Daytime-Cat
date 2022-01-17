@@ -23,7 +23,7 @@ end
 
 local vicinity = function (ptsPart, r, x, y)
   local rsq = r * r
-  local best = rsq
+  local best, bestObj = rsq, nil
   for cx = cellCoord(x - r), cellCoord(x + r) do
     for cy = cellCoord(y - r), cellCoord(y + r) do
       local t = ptsPart[cellId(cx, cy)]
@@ -32,13 +32,13 @@ local vicinity = function (ptsPart, r, x, y)
           local p = t[i]
           local dsq = (x - p.x)^2 + (y - p.y)^2
           if dsq < best then
-            best = dsq
+            best, bestObj = dsq, p
           end
         end
       end
     end
   end
-  return math.sqrt(best / rsq)
+  return math.sqrt(best / rsq), bestObj
 end
 
 return {
