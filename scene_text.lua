@@ -5,16 +5,17 @@ sceneText = function (ty)
   local s = {}
 
   local strings = {
-    [1] = "I'm not like other cats.\nI sleep at night and come out by day.",
-    [2] = "So I tell them to leave me alone.\nEvery day I follow their pawprints to them.",
-    [3] = "It's not easy, but daylight is enjoyable to me.",
-    [10] = "There are a thousand ways to be a cat.\nEnjoying the daytime is one of them.",
+    [1] = "-  Daytime Cat  -",
+    [2] = "I'm not like other cats.\nI sleep at night and come out by day.",
+    [3] = "So I ask them to leave me alone.\nI follow their pawprints to reunite with them.",
+    [4] = "It's not easy, but for me daylight is enjoyable.\nThose cats don't get to appreciate this.",
+    [10] = "There are a thousand ways to live a cat's life.\nEnjoying the daytime is one of them.",
     [11] = "Thank you for playing > <\n ",
   }
   local images = {
-    [1] = 'res/cat2.png',
-    [2] = 'res/sleep.png',
-    [3] = 'res/paw.png',
+    [2] = 'res/cat2.png',
+    [3] = 'res/sleep.png',
+    [4] = 'res/paw.png',
     [10] = 'res/cat3.png',
     [11] = 'res/fish.png',
   }
@@ -75,8 +76,12 @@ sceneText = function (ty)
     lastKeyPrev = curKeyPrev
   end
 
-  local image = love.graphics.newImage(images[ty])
-  local imageW, imageH = image:getDimensions()
+  local image
+  local imageW, imageH
+  if images[ty] ~= nil then
+    image = love.graphics.newImage(images[ty])
+    imageW, imageH = image:getDimensions()
+  end
   s.draw = function ()
     love.graphics.clear(1.00, 0.99, 0.93)
     love.graphics.setColor(0.1, 0.1, 0.1)
