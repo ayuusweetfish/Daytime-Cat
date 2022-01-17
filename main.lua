@@ -13,9 +13,16 @@ local wDev, hDev = love.graphics.getDimensions()
 W = wDev / hDev * H
 globalScale = math.min(wDev / W, hDev / H)
 
-local sceneGame = require 'scene_game'
+-- Load font
+_G['font_Mali'] = love.graphics.newFont('res/Mali-Regular.ttf', 40)
+love.graphics.setFont(_G['font_Mali'])
 
-local curScene = sceneGame(1)
+local sceneText = require 'scene_text'
+local sceneGame = require 'scene_game'
+_G['sceneText'] = sceneText
+_G['sceneGame'] = sceneGame
+
+local curScene = sceneGame(5)--Text(1)
 local lastScene = nil
 local transitionTimer = 0
 local currentTransition = nil
@@ -79,6 +86,22 @@ transitions['fadeBlack'] = {
       opacity = 2 - x * 2
     end
     love.graphics.setColor(0.1, 0.1, 0.1, opacity)
+    love.graphics.rectangle('fill', 0, 0, W, H)
+  end
+}
+
+transitions['fadeOrange'] = {
+  dur = 80,
+  draw = function (x)
+    local opacity = 0
+    if x < 0.5 then
+      lastScene:draw()
+      opacity = x * 2
+    else
+      curScene:draw()
+      opacity = 2 - x * 2
+    end
+    love.graphics.setColor(1.00, 0.99, 0.93, opacity)
     love.graphics.rectangle('fill', 0, 0, W, H)
   end
 }

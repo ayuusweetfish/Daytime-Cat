@@ -13,6 +13,9 @@ for i = 1, 4 do
   )
 end
 
+local catImage = love.graphics.newImage('res/cat1.png')
+local catW, catH = catImage:getDimensions()
+
 local pawImage = love.graphics.newImage('res/paw.png')
 local pawW, pawH = pawImage:getDimensions()
 
@@ -32,11 +35,13 @@ local levels = {
   {3, 20, 0, 10, 0.2,
    0, 300, 0},
   {1, 10, 0, 10, 0.5,
-   0, 300, 50},
-  {15, 3, 2, 2.5, 0.4,
-   0, 500, 50},
+   3, 500, 50},
+  {15, 3, 2, 2.5, 1.0,
+   0, 500, 500},
   {15, 7, 3, 3.5, 1.0,
    331552, 2000, 200},
+  {333152, 7, 3.5, 4, 1.0,
+   0, 500, 500},
 }
 
 local sceneGame
@@ -189,6 +194,12 @@ sceneGame = function (level)
   local spAllPaws = spPartition(paws)
   local spBushes = spPartition(bushes)
 
+  -- Level title text
+  local levelText = love.graphics.newText(
+    love.graphics.getFont(),
+    'Day ' .. level
+  )
+
   local camX, camY = 0, 0
   local catX, catY = 0, 0
 
@@ -203,7 +214,9 @@ sceneGame = function (level)
 
   local curInBush = nil
   local curInBushTime = 0
+  local levelEnterTime = 0
   local levelClearTime = -1
+  local lastDir = 0   -- 0: up, 1: down, 2: left, 3: right
 
   s.update = function ()
     -- Move cat
@@ -217,6 +230,8 @@ sceneGame = function (level)
       catX = catX + v * moveX
       catY = catY + v * moveY
     end
+    if moveX ~= 0 then lastDir = (moveX < 0 and 2 or 3) end
+    if moveY ~= 0 then lastDir = (moveY < 0 and 0 or 1) end
 
     -- Check bush intersection
     local _, inBush = spVicinity(spBushes, 60, catX, catY)
@@ -243,7 +258,11 @@ sceneGame = function (level)
     if levelClearTime >= 0 then
       levelClearTime = levelClearTime + 1
       if levelClearTime == 240 then
-        _G['replaceScene'](sceneGame(level + 1))
+        if level == #levels then
+          _G['replaceScene'](_G['sceneText'](4))
+        else
+          _G['replaceScene'](sceneGame(level + 1))
+        end
       end
     end
 
@@ -257,6 +276,8 @@ sceneGame = function (level)
     else
       camX, camY = catX, catY
     end
+
+    levelEnterTime = levelEnterTime + 1
   end
 
   s.draw = function ()
@@ -326,10 +347,27 @@ sceneGame = function (level)
       end
     end
 
+    -- Cat
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(catImage,
+      ox + catX, oy + catY, 0, 1, 1,
+      catW / 2, catH / 2)
+
+    -- Level text
+    if levelEnterTime < 600 then
+      local alpha = math.min(1, (600 - levelEnterTime) / 120)
+      love.graphics.setColor(0.1, 0.1, 0.1, alpha)
+      love.graphics.draw(levelText,
+        W * 0.5, H * 0.62, 0, 1, 1,
+        levelText:getWidth() / 2,
+        levelText:getHeight() / 2
+      )
+    end
+
+  --[[
     love.graphics.setColor(0.1, 0.1, 0.1)
     love.graphics.setPointSize(4)
     love.graphics.setLineWidth(2)
-  --[[
     for i = 1, #p do
       love.graphics.points(ox + p[i].x, oy + p[i].y)
     end
@@ -338,8 +376,8 @@ sceneGame = function (level)
         ox + p[i - 1].x, oy + p[i - 1].y,
         ox + p[i].x, oy + p[i].y)
     end
-  ]]
     love.graphics.points(ox + catX, oy + catY)
+  ]]
   end
 
   s.destroy = function ()
