@@ -348,6 +348,24 @@ sceneGame = function (level)
       )
     end
 
+    -- Cat
+    love.graphics.setColor(1, 1, 1)
+    if lastDirY == -1 then
+      love.graphics.draw(cat1Image,
+        ox + catX, oy + catY,
+        lastDirX * math.pi / 12,
+        (lastDirX < 0 and -1 or 1), 1,
+        catW / 2, catH / 2)
+    elseif lastDirY == 1 then
+      love.graphics.draw(cat3Image,
+        ox + catX, oy + catY, 0, (lastDirX <= 0 and 1 or -1), 1,
+        catW / 2, catH / 2)
+    else
+      love.graphics.draw(cat2Image,
+        ox + catX, oy + catY, 0, (lastDirX < 0 and -1 or 1), 1,
+        catW / 2, catH / 2)
+    end
+
     love.graphics.setColor(1, 1, 1)
     for i = 1, #bushes do
       local b = bushes[i]
@@ -377,24 +395,6 @@ sceneGame = function (level)
             ox + b.x, oy + b.y, 0, 1, squeeze, bush1W / 2, bush1H * 0.9)
         end
       end
-    end
-
-    -- Cat
-    love.graphics.setColor(1, 1, 1)
-    if lastDirY == -1 then
-      love.graphics.draw(cat1Image,
-        ox + catX, oy + catY,
-        lastDirX * math.pi / 12,
-        (lastDirX < 0 and -1 or 1), 1,
-        catW / 2, catH / 2)
-    elseif lastDirY == 1 then
-      love.graphics.draw(cat3Image,
-        ox + catX, oy + catY, 0, (lastDirX <= 0 and 1 or -1), 1,
-        catW / 2, catH / 2)
-    else
-      love.graphics.draw(cat2Image,
-        ox + catX, oy + catY, 0, (lastDirX < 0 and -1 or 1), 1,
-        catW / 2, catH / 2)
     end
 
     -- Level text
