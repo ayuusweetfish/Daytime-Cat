@@ -13,8 +13,10 @@ for i = 1, 4 do
   )
 end
 
-local catImage = love.graphics.newImage('res/cat1.png')
-local catW, catH = catImage:getDimensions()
+local cat1Image = love.graphics.newImage('res/cat1.png')
+local cat2Image = love.graphics.newImage('res/cat2.png')
+local cat3Image = love.graphics.newImage('res/cat3.png')
+local catW, catH = cat1Image:getDimensions()
 
 local pawImage = love.graphics.newImage('res/paw.png')
 local pawW, pawH = pawImage:getDimensions()
@@ -33,7 +35,7 @@ local levels = {
   -- track: seed, curv, lmin, lmax, trunc,
   -- noise: seed, spray, arcs
   {3, 20, 0, 10, 0.2,
-   0, 300, 0},
+   0, 200, 0},
   {1, 10, 0, 10, 0.5,
    3, 500, 50},
   {15, 3, 2, 2.5, 1.0,
@@ -199,6 +201,13 @@ sceneGame = function (level)
     love.graphics.getFont(),
     'Day ' .. level
   )
+  local hintText
+  if level == 1 then
+    hintText = love.graphics.newText(
+      love.graphics.getFont(),
+      'Use arrow keys or W/S/A/D'
+    )
+  end
 
   local camX, camY = 0, 0
   local catX, catY = 0, 0
@@ -214,9 +223,9 @@ sceneGame = function (level)
 
   local curInBush = nil
   local curInBushTime = 0
-  local levelEnterTime = 0
+  local levelEnterTime = -1200
   local levelClearTime = -1
-  local lastDir = 0   -- 0: up, 1: down, 2: left, 3: right
+  local lastDirX, lastDirY = 0, -1
 
   s.update = function ()
     -- Move cat
@@ -229,9 +238,9 @@ sceneGame = function (level)
       local v = 1.5 / (moveX^2 + moveY^2)^0.5
       catX = catX + v * moveX
       catY = catY + v * moveY
+      lastDirX, lastDirY = moveX, moveY
+      if levelEnterTime < 0 then levelEnterTime = 0 end
     end
-    if moveX ~= 0 then lastDir = (moveX < 0 and 2 or 3) end
-    if moveY ~= 0 then lastDir = (moveY < 0 and 0 or 1) end
 
     -- Check bush intersection
     local _, inBush = spVicinity(spBushes, 60, catX, catY)
@@ -349,19 +358,38 @@ sceneGame = function (level)
 
     -- Cat
     love.graphics.setColor(1, 1, 1)
-    love.graphics.draw(catImage,
-      ox + catX, oy + catY, 0, 1, 1,
-      catW / 2, catH / 2)
+    if lastDirY == -1 then
+      love.graphics.draw(cat1Image,
+        ox + catX, oy + catY,
+        lastDirX * math.pi / 12,
+        (lastDirX < 0 and -1 or 1), 1,
+        catW / 2, catH / 2)
+    elseif lastDirY == 1 then
+      love.graphics.draw(cat3Image,
+        ox + catX, oy + catY, 0, (lastDirX <= 0 and 1 or -1), 1,
+        catW / 2, catH / 2)
+    else
+      love.graphics.draw(cat2Image,
+        ox + catX, oy + catY, 0, (lastDirX < 0 and -1 or 1), 1,
+        catW / 2, catH / 2)
+    end
 
     -- Level text
-    if levelEnterTime < 600 then
-      local alpha = math.min(1, (600 - levelEnterTime) / 120)
+    if levelEnterTime < 480 then
+      local alpha = math.min(1, (480 - levelEnterTime) / 120)
       love.graphics.setColor(0.1, 0.1, 0.1, alpha)
       love.graphics.draw(levelText,
         W * 0.5, H * 0.62, 0, 1, 1,
         levelText:getWidth() / 2,
         levelText:getHeight() / 2
       )
+      if hintText ~= nil then
+        love.graphics.draw(hintText,
+          W * 0.5, H * 0.68, 0, 0.7, 0.7,
+          hintText:getWidth() / 2,
+          hintText:getHeight() / 2
+        )
+      end
     end
 
   --[[

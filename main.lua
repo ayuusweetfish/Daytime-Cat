@@ -22,7 +22,7 @@ local sceneGame = require 'scene_game'
 _G['sceneText'] = sceneText
 _G['sceneGame'] = sceneGame
 
-local curScene = sceneGame(5)--Text(1)
+local curScene = sceneText(1)
 local lastScene = nil
 local transitionTimer = 0
 local currentTransition = nil
