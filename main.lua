@@ -1,32 +1,101 @@
-local randomPath = require 'randpath'
+W = 1080
+H = 720
 
-local seed = 0
+local isMobile = (love.system.getOS() == 'Android' or love.system.getOS() == 'iOS')
 
-function love.mousepressed()
-  seed = seed + 1
-  p = randomPath(seed, 7, 3, 3.5)
-  --p = randomPath(seed, 3, 2, 2.5)
-  --p = randomPath(seed, 20, 0, 10)
+local globalScale
+love.window.setMode(W, H, {
+  fullscreen = isMobile,
+  highdpi = true,
+})
+love.window.setTitle('Daytime Cat')
+local wDev, hDev = love.graphics.getDimensions()
+W = wDev / hDev * H
+globalScale = math.min(wDev / W, hDev / H)
+
+local sceneGame = require 'scene_game'
+
+local curScene = sceneGame()
+local lastScene = nil
+local transitionTimer = 0
+local currentTransition = nil
+local transitions = {}
+
+_G['replaceScene'] = function (newScene, transitionName)
+  lastScene = curScene
+  curScene = newScene
+  transitionTimer = 0
+  currentTransition = transitions[transitionName or 'fadeBlack']
 end
 
-love.mousepressed()
+local mouseScene = nil
+function love.mousepressed(x, y, button, istouch, presses)
+  if button ~= 1 then return end
+  if lastScene ~= nil then return end
+  mouseScene = curScene
+  curScene.press(x / globalScale, y / globalScale)
+end
+function love.mousemoved(x, y, button, istouch)
+  if mouseScene ~= curScene then return end
+  curScene.move(x / globalScale, y / globalScale)
+end
+function love.mousereleased(x, y, button, istouch, presses)
+  if button ~= 1 then return end
+  if mouseScene ~= curScene then return end
+  curScene.release(x / globalScale, y / globalScale)
+  mouseScene = nil
+end
+
+local T = 0
+local timeStep = 1 / 240
+
+function love.upate()
+  T = T + dt
+  local count = 0
+  while T > timeStep do
+    T = T - timeStep
+    count = count + 1
+    if lastScene ~= nil then
+      lastScene:update()
+      -- At most 4 ticks per update for transitions
+      if count <= 4 then
+        transitionTimer = transitionTimer + 1
+      end
+    else
+      curScene:update()
+    end
+  end
+end
+
+transitions['fadeBlack'] = {
+  dur = 160,
+  draw = function (x)
+    local opacity = 0
+    if x < 0.5 then
+      lastScene:draw()
+      opacity = x * 2
+    else
+      curScene:draw()
+      opacity = 2 - x * 2
+    end
+    love.graphics.setColor(0.1, 0.1, 0.1, opacity)
+    love.graphics.rectangle('fill', 0, 0, W, H)
+  end
+}
 
 function love.draw()
-  love.graphics.clear(0.98, 0.98, 0.98)
-  love.graphics.setColor(0.1, 0.1, 0.1)
-  love.graphics.setPointSize(4)
-  love.graphics.setLineWidth(2)
-  local w, h = love.graphics.getDimensions()
-  local xscale = math.min(w, h) * 0.4
-  local yscale = math.min(w, h) * 0.4
-  local ox = w * 0.5
-  local oy = h * 0.5
-  for i = 1, #p do
-    love.graphics.points(ox + p[i].x * xscale, oy + p[i].y * yscale)
-  end
-  for i = 2, #p do
-    love.graphics.line(
-      ox + p[i - 1].x * xscale, oy + p[i - 1].y * yscale,
-      ox + p[i].x * xscale, oy + p[i].y * yscale)
+  love.graphics.scale(globalScale)
+  love.graphics.setColor(0.975, 0.975, 0.975)
+  love.graphics.rectangle('fill', 0, 0, W, H)
+  love.graphics.setColor(1, 1, 1)
+  if lastScene ~= nil then
+    local x = transitionTimer / currentTransition.dur
+    currentTransition.draw(x)
+    if x >= 1 then
+      if lastScene.destroy then lastScene.destroy() end
+      lastScene = nil
+    end
+  else
+    curScene.draw()
   end
 end
