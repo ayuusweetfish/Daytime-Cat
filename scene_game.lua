@@ -37,18 +37,24 @@ local levels = {
   -- noise: seed, spray, arcs
   {3, 20, 0, 10, 0.2,
    0, 200, 0},
+  {2, 10, 0, 10, 0.25,
+   1, 100, 10},
   {1, 10, 0, 10, 0.5,
    3, 500, 50},
+  {9, 3, 2, 2.5, 1.0,
+   9, 500, 100},
   {15, 3, 2, 2.5, 1.0,
    0, 500, 500},
   {15, 7, 3, 3.5, 1.0,
    331552, 2000, 200},
   {333152, 7, 3.5, 4, 1.0,
    0, 500, 500},
+--[[
   {152, 7, 3.5, 4, 1.0,
    152, 1000, 500},
   {152152, 8, 4.5, 5, 1.0,
    117, 1500, 500},
+]]
 }
 
 local sceneGame
@@ -79,10 +85,11 @@ sceneGame = function (level)
 
   -- Paws
   local paws = {}
-  local addPaw = function (x, y, angle, flip)
+  local addPaw = function (x, y, angle, flip, isTrack)
     paws[#paws + 1] = {
       x = x, y = y, angle = angle,
       flip = flip,
+      track = isTrack,
     }
   end
   -- Bushes
@@ -98,7 +105,7 @@ sceneGame = function (level)
     addPaw(
       p[i].x + (isLeft and nx or -nx),
       p[i].y + (isLeft and ny or -ny),
-      angle, isLeft
+      angle, isLeft, true
     )
   end
   -- On-track paws lookup table
@@ -133,7 +140,8 @@ sceneGame = function (level)
       addPaw(
         x2, y2,
         love.math.random() * math.pi * 2,
-        love.math.random() < 0.5
+        love.math.random() < 0.5,
+        false
       )
     end
   end
@@ -184,7 +192,7 @@ sceneGame = function (level)
       local x = cx + math.cos(angle) * r
       local y = cy + math.sin(angle) * r
       if love.math.random() < spVicinity(spTrackPaws, 120, x, y) then
-        addPaw(x, y, angle, flipped)
+        addPaw(x, y, angle, flipped, false)
       end
     end
     -- Add bush
@@ -212,6 +220,11 @@ sceneGame = function (level)
       love.graphics.getFont(),
       'Use arrow keys or W/S/A/D or mouse'
     )
+  elseif level == 3 then
+    hintText = love.graphics.newText(
+      love.graphics.getFont(),
+      'When lost, stop and smell -- you will notice the path'
+    )
   end
 
   local camX, camY = 0, 0
@@ -231,11 +244,16 @@ sceneGame = function (level)
 
   local curInBush = nil
   local curInBushTime = 0
-  local levelEnterTime = -1200
+  local levelEnterTime = -2400
   local levelClearTime = -1
+  local stayTime = 0
   local lastDirX, lastDirY = 0, -1
 
   s.update = function ()
+    if stayTime < 480 then
+      stayTime = stayTime + 1
+    end
+
     -- Move cat
     local moveX, moveY = 0, 0
     if levelClearTime < 0 then
@@ -263,6 +281,8 @@ sceneGame = function (level)
         end
       end
       if moveX ~= 0 or moveY ~= 0 then
+        stayTime = stayTime - 3
+        if stayTime < 0 then stayTime = 0 end
         local v = 1.5 / (moveX^2 + moveY^2)^0.5
         catX = catX + v * moveX
         catY = catY + v * moveY
@@ -347,15 +367,24 @@ sceneGame = function (level)
     love.graphics.circle('fill', ox, oy, 90)
 
     -- Paws
-    love.graphics.setColor(1, 1, 1)
     spForEach(
       spAllPaws,
       camX - W / 2 - 100, camY - H / 2 - 100,
       camX + W / 2 + 100, camY + H / 2 + 100,
       function (p)
+        local tint = 1
+        local scale = 0.6
+        if stayTime >= 360 and p.track then
+          local x = math.max(0, 1 - ((p.x - catX)^2 + (p.y - catY)^2)^0.5 / 480)
+          local t = math.min(stayTime - 360, 180) / 180
+          t = (math.sin((t - 0.5) * math.pi) + 1) / 2
+          tint = 1 - x * t * 0.6
+          scale = 0.6 + x * t * 0.1
+        end
+        love.graphics.setColor(tint, tint, tint)
         love.graphics.draw(pawImage,
           ox + p.x, oy + p.y, p.angle,
-          p.flip and -0.6 or 0.6, 0.6,
+          p.flip and -scale or scale, scale,
           pawW / 2, pawH / 2
         )
       end)

@@ -5,7 +5,7 @@ sceneText = function (ty)
   local s = {}
 
   local strings = {
-    [1] = "-  Daytime Cat  -",
+    [1] = "-  Daytime Cat  -\n ",
     [2] = "I'm not like other cats.\nI sleep at night and come out by day.",
     [3] = "So I ask them to leave me alone.\nI follow their pawprints to reunite with them.",
     [4] = "It's not easy, but for me daylight is enjoyable.\nThose cats don't get to appreciate this.",
@@ -25,7 +25,12 @@ sceneText = function (ty)
     strings[ty]
   )
   local subtext
-  if ty == 11 then
+  if ty == 1 then
+    subtext = love.graphics.newText(
+      love.graphics.getFont(),
+      'Click or press right arrow'
+    )
+  elseif ty == 11 then
     subtext = love.graphics.newText(
       love.graphics.getFont(),
       '-  Daytime Cat  -'
