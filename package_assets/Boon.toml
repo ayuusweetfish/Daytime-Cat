@@ -1,0 +1,14 @@
+[project]
+authors = "ayuusweetfish"
+description = "A unique cat that does not sleep by daylight"
+email = "shiqing-thu18@yandex.com"
+package_name = "DaytimeCat"
+title = "DaytimeCat"
+url = "https://ayuusweetfish.itch.io/daytime-cat"
+uti = "ink.ayuu.daytimecat"
+version = "v1.0"
+
+[build]
+output_directory = "boon"
+ignore_list = ["Boon.toml"]
+exclude_default_ignore_list = true
