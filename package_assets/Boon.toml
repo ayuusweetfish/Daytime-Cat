@@ -10,5 +10,5 @@ version = "v1.0"
 
 [build]
 output_directory = "boon"
-ignore_list = ["Boon.toml"]
+ignore_list = ["Boon.toml", "boon"]
 exclude_default_ignore_list = true

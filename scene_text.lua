@@ -37,7 +37,7 @@ sceneText = function (ty)
         T = T + 1
         return
       end
-      local x0, y0 = 1372, 2042
+      local x0, y0 = W + 292, H + 1322
       local r = 1590
       local a = 4.1
       local b = 4.6
@@ -59,7 +59,7 @@ sceneText = function (ty)
           pawW / 2, pawH / 2)
       end
       love.graphics.setColor(1, 1, 1)
-      love.graphics.draw(cat, 630, 460)
+      love.graphics.draw(cat, W - 450, H - 260)
     end
   end
 
@@ -71,7 +71,8 @@ sceneText = function (ty)
   if ty == 1 then
     subtext = love.graphics.newText(
       love.graphics.getFont(),
-      'Click or press left/right arrows'
+      _G['isMobile'] and 'Tap anywhere'
+        or 'Click or press left/right arrows'
     )
   elseif ty == 11 then
     subtext = love.graphics.newText(

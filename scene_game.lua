@@ -220,7 +220,8 @@ sceneGame = function (level)
   if level == 1 then
     hintText = love.graphics.newText(
       love.graphics.getFont(),
-      'Use arrow keys, or W/S/A/D, or drag'
+      _G['isMobile'] and 'Tap and hold to move'
+        or 'Use arrow keys, or W/S/A/D, or drag'
     )
   elseif level == 3 then
     hintText = love.graphics.newText(

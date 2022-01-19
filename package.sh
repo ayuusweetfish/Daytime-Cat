@@ -1,5 +1,5 @@
 #!/bin/sh
-# BOON=~/dev/boon/target/debug/boon RCEDIT=~/Downloads/rcedit-x64.exe LOVE_ANDROID=~/dev/love-android ANDROID_HOME=~/Library/Android/sdk JAVA_HOME=/usr/local/Cellar/openjdk/16.0.1 sh assets/build_release.sh
+# BOON=~/dev/boon/target/debug/boon RCEDIT=~/Downloads/rcedit-x64.exe LOVE_ANDROID=~/dev/love-android-11.4 ANDROID_HOME=~/Library/Android/sdk JAVA_HOME=/usr/local/Cellar/openjdk/16.0.1 sh assets/build_release.sh
 
 # Package .love
 rm -rf build
@@ -63,18 +63,17 @@ cd ../..
 rm -rf cat.ico cat.iconset cat.icns Boon.toml game
 
 # Android
-#${SQUARE_ICON} -scale 42x42   ${LOVE_ANDROID}/app/src/main/res/drawable-mdpi/love.png
-#${SQUARE_ICON} -scale 72x72   ${LOVE_ANDROID}/app/src/main/res/drawable-hdpi/love.png
-#${SQUARE_ICON} -scale 96x96   ${LOVE_ANDROID}/app/src/main/res/drawable-xhdpi/love.png
-#${SQUARE_ICON} -scale 144x144 ${LOVE_ANDROID}/app/src/main/res/drawable-xxhdpi/love.png
-#${SQUARE_ICON} -scale 192x192 ${LOVE_ANDROID}/app/src/main/res/drawable-xxxhdpi/love.png
-#cp DaytimeCat.love ${LOVE_ANDROID}/app/src/main/assets/game.love
-## Unsigned APK
-#(cd ${LOVE_ANDROID} && ./gradlew bundleEmbedRelease)
-#bundletool build-apks --bundle=${LOVE_ANDROID}/app/build/outputs/bundle/embedRelease/app-embed-release.aab --output=DaytimeCat.apks --mode=universal
-#unzip DaytimeCat.apks universal.apk -d apks
-#mv apks/universal.apk DaytimeCat.apk
-#rm -rf apks DaytimeCat.apks
+${SQUARE_ICON} -scale 42x42   ${LOVE_ANDROID}/app/src/main/res/drawable-mdpi/love.png
+${SQUARE_ICON} -scale 72x72   ${LOVE_ANDROID}/app/src/main/res/drawable-hdpi/love.png
+${SQUARE_ICON} -scale 96x96   ${LOVE_ANDROID}/app/src/main/res/drawable-xhdpi/love.png
+${SQUARE_ICON} -scale 144x144 ${LOVE_ANDROID}/app/src/main/res/drawable-xxhdpi/love.png
+${SQUARE_ICON} -scale 192x192 ${LOVE_ANDROID}/app/src/main/res/drawable-xxxhdpi/love.png
+cp DaytimeCat.love ${LOVE_ANDROID}/app/src/embed/assets/game.love
+# Unsigned APK
+(cd ${LOVE_ANDROID} && ./gradlew assembleEmbedNoRecordRelease)
+cp ${LOVE_ANDROID}/app/build/outputs/apk/embedNoRecord/release/app-embed-noRecord-release-unsigned.apk DaytimeCat.apk
+# Sign
+# ~/Library/Android/sdk/build-tools/31.0.0/apksigner sign --ks ~/.android/debug.keystore DaytimeCat.apk
 
 # Web
 love.js --compatibility --title "Daytime Cat" DaytimeCat.love DaytimeCat-web
