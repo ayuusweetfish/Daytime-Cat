@@ -214,16 +214,18 @@ sceneGame = function (level)
     love.graphics.getFont(),
     'Day ' .. level
   )
+  local levelTextPos = H * 0.62
+  if level == 2 then levelTextPos = H * 0.32 end
   local hintText
   if level == 1 then
     hintText = love.graphics.newText(
       love.graphics.getFont(),
-      'Use arrow keys or W/S/A/D or mouse'
+      'Use arrow keys, or W/S/A/D, or drag'
     )
   elseif level == 3 then
     hintText = love.graphics.newText(
       love.graphics.getFont(),
-      'When lost, stop and smell -- you will notice the path'
+      'When lost, stop and smell'
     )
   end
 
@@ -317,6 +319,8 @@ sceneGame = function (level)
       if levelClearTime == 240 then
         if level == #levels then
           _G['replaceScene'](_G['sceneText'](10))
+        elseif level == 2 then
+          _G['replaceScene'](_G['sceneText'](20))
         else
           _G['replaceScene'](sceneGame(level + 1))
         end
@@ -446,13 +450,13 @@ sceneGame = function (level)
       local alpha = math.min(1, (480 - levelEnterTime) / 120)
       love.graphics.setColor(0.1, 0.1, 0.1, alpha)
       love.graphics.draw(levelText,
-        W * 0.5, H * 0.62, 0, 1, 1,
+        W * 0.5, levelTextPos, 0, 1, 1,
         levelText:getWidth() / 2,
         levelText:getHeight() / 2
       )
       if hintText ~= nil then
         love.graphics.draw(hintText,
-          W * 0.5, H * 0.68, 0, 0.7, 0.7,
+          W * 0.5, levelTextPos + H * 0.06, 0, 0.7, 0.7,
           hintText:getWidth() / 2,
           hintText:getHeight() / 2
         )
